@@ -1,0 +1,108 @@
+{% if end_date != blank %} 
+
+    <div class="timer"> 
+    <div class="timer-title">
+        <span class="timer__title">{{ title }}</span>
+    </div>
+    <div class="timer-display"> 
+            <div class="timer-block"> 
+            <span class="timer-block__num js-timer-days">00</span> 
+            <span class="timer-block__unit">d</span> 
+            </div> 
+            <div class="timer-block"> 
+            <span class="timer-block__num js-timer-hours">00</span> 
+            <span class="timer-block__unit">h</span> 
+            </div> 
+            <div class="timer-block"> 
+            <span class="timer-block__num js-timer-minutes">00</span> 
+            <span class="timer-block__unit">m</span> 
+            </div> 
+            <div class="timer-block"> 
+            <span class="timer-block__num js-timer-seconds">00</span> 
+            <span class="timer-block__unit">s</span> 
+            </div> 
+        </div> 
+    </div> 
+
+ <style> 
+    .timer { 
+        background: #f6fafd; 
+        display:flex;
+        justify-content:center;
+        align-items:center
+    } 
+    .timer.special-offer-expired::after {
+        content: "SPECIAL OFFER EXPIRED";
+        display: block;
+        text-align: center;
+        font-weight: bold;
+        color: red;
+        margin: 10px 0;
+      }
+    .timer__title { 
+        text-align: center; 
+        width:300px;
+    } 
+    .timer-display { 
+        display: flex; 
+        justify-content: space-between; 
+        max-width:100%;
+        padding:20px
+   } 
+   .timer-block { 
+        display:flex;
+        align-items: center;
+        position: relative; 
+        width: 25%; 
+        padding: 0 10px; 
+   } 
+   .timer-block__num, 
+   .timer-block__unit { 
+        display: block; 
+        text-align: center; 
+   } 
+   @media (max-width: 500px) {
+    .timer {
+        flex-direction:column
+    }
+    .timer-title{
+        padding-top: 20px;}
+  
+    .timer.special-offer-expired::after{
+    margin-top: 0
+    }
+}
+ </style> 
+
+ <script type="text/javascript"> 
+    const second = 1000, 
+        minute = second * 60, 
+        hour = minute * 60, 
+        day = hour * 24; 
+    const countDown = new Date('{{- end_date -}}').getTime(),
+    lastRenderedTime = new Date().getTime(),
+    lastRenderedDistance = countDown - lastRenderedTime
+    if (lastRenderedDistance < 0){
+        document.querySelector('.timer').classList.add('special-offer-expired')
+    }
+    const x = setInterval(function() { 
+            const now = new Date().getTime(),
+            distance = countDown - now
+            if(distance>0){
+            document.querySelector('.js-timer-days').innerText = Math.floor(distance / (day)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})
+            document.querySelector('.js-timer-hours').innerText = Math.floor((distance % (day)) / (hour)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}), 
+            document.querySelector('.js-timer-minutes').innerText = Math.floor((distance % (hour)) / (minute)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}), 
+            document.querySelector('.js-timer-seconds').innerText = Math.floor((distance % (minute)) / second).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}); 
+        } else{
+            document.querySelector('.js-timer-days').innerText = 00.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})
+            document.querySelector('.js-timer-hours').innerText = 00.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})
+            document.querySelector('.js-timer-minutes').innerText = 00.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})
+            document.querySelector('.js-timer-seconds').innerText = 00.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})
+            
+        }
+    }
+        , second)
+ </script> 
+
+ {% endif %}
+

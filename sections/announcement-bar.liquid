@@ -1,6 +1,7 @@
+{{ 'custom.css' | asset_url | stylesheet_tag }}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
-    {%- when 'announcement' -%}
+    {%- when 'announcement'-%}
       <div class="announcement-bar color-{{ block.settings.color_scheme }} gradient" role="region" aria-label="{{ 'sections.header.announcement' | t }}" {{ block.shopify_attributes }}>
         {%- if block.settings.text != blank -%}
           {%- if block.settings.link != blank -%}
@@ -19,6 +20,14 @@
           {%- endif -%}
         {%- endif -%}
       </div>
+      {%- when 'countdown'-%}
+        <div class="announcement-bar color-{{ block.settings.color_scheme }} gradient" role="region" aria-label="{{ 'sections.header.announcement' | t }}" {{ block.shopify_attributes }}>
+          <div>{% render 'countdown-timer', 
+              title: {{block.settings.text}},
+              end_date: {{block.settings.date}}           
+             %}
+          </div>          
+        </div>
   {%- endcase -%}
 {%- endfor -%}
 
@@ -90,6 +99,32 @@
           "type": "url",
           "id": "link",
           "label": "t:sections.announcement-bar.blocks.announcement.settings.link.label"
+        }
+      ]
+    },
+    {
+      "type": "countdown",
+      "name": "Countdown",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "default": "Offer Name",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.text.label"
+        },
+        {
+          "type": "text",
+          "id": "date",
+          "default": "Dec 31, 2025",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.text.label"
+        },
+        {
+          "type": "paragraph",
+          "content": "Please enter the date and time of the offer expiration following the format below"
+        },
+        {
+          "type": "header",
+          "content": "Dec 25, 2023 23:59:00 GMT-0700"
         }
       ]
     }
