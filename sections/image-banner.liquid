@@ -11,7 +11,7 @@
         display: block;
       }
     }
-    
+     
     @media screen and (min-width: 750px) {
       #Banner-{{ section.id }}::before,
       #Banner-{{ section.id }} .banner__media::before {
@@ -29,9 +29,6 @@
   }
 {%- endstyle -%}
 
-<div>
-{{ section.settings.video }}
-</div>
 <div
   id="Banner-{{ section.id }}"
   class="banner banner--content-align-{{ section.settings.desktop_content_alignment }} banner--content-align-mobile-{{ section.settings.mobile_content_alignment }} banner--{{ section.settings.image_height }}{% if section.settings.stack_images_on_mobile and section.settings.image != blank and section.settings.image_2 != blank %} banner--stacked{% endif %}{% if section.settings.image_height == 'adapt' and section.settings.image != blank %} banner--adapt{% endif %}{% if section.settings.show_text_below %} banner--mobile-bottom{%- endif -%}{% if section.settings.show_text_box == false %} banner--desktop-transparent{% endif %}"
@@ -65,12 +62,11 @@
             widths: '375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840'
         }}
         
-        {%- elsif section.settings.show_video_banner == true -%}       
-        <div id='disp_video'></div>
+        {%- elsif section.settings.show_video_banner == true -%} 
+        <div id="disp_video"></div>
         {%- endif -%}
-
       </div>
-
+      
     {%- elsif section.settings.image_2 == blank -%}
       <div class="banner__media media{% if section.settings.image == blank and section.settings.image_2 == blank %} placeholder{% endif %}{% if section.settings.image_2 != blank %} banner__media-half{% endif %}">
         {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
@@ -104,7 +100,7 @@
         }}
       </div>
     {%- endif -%}
-
+    
   <div class="banner__content banner__content--{{ section.settings.desktop_content_position }} page-width">
     <div class="banner__box content-container content-container--full-width-mobile color-{{ section.settings.color_scheme }} gradient">
       {%- for block in section.blocks -%}
@@ -152,23 +148,19 @@
     </div>
   </div>
 </div>
-
-<script>
+<script defer="defer">
   let w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
-  let video = document.getElementById('disp_video')
-
-  if(w>720){
-    video.innerHTML = '{{ section.settings.video_desktop | video_tag: autoplay: true, 
-      loop: true
-    }}'
-  }
-  else{
-        video.innerHTML = '{{ section.settings.video_mobile | video_tag: autoplay: true, 
-            loop: true
-    }}'
-  }
+  let video = document.getElementById('disp_video') 
+  if({{ section.settings.show_video_banner }} == true) 
+    {
+      if(w>720){
+        video.innerHTML = '{{ section.settings.video_desktop | video_tag: autoplay: true, loop: true }}'
+      }
+      else{
+      video.innerHTML = '{{ section.settings.video_mobile | video_tag: autoplay: true, loop: true }}'
+      }
+    }
 </script>
-
 {% schema %}
 {
   "name": "t:sections.image-banner.name",
