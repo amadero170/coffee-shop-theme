@@ -13,6 +13,12 @@
   }
 </style>
 
+<form method="post" id="upsell_form">
+  <input type="text" name="sections" value="cart-drawer" />
+  <input type="text" name="sections_url" value="/cart"/>
+  <input type="text" name="id" value="{{ settings.product.variants[0].id }}"/>
+</form> 
+
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
   <div id="CartDrawer" class="cart-drawer">
     <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
@@ -338,6 +344,44 @@
                         </td>
                       </tr>
                     {%- endfor -%}
+                    {% if settings.product %}
+                      <tr id="upsell-cart-item" class="cart-item" role="row" upsell-item-title="{{settings.product.title}}">
+                      <td class="cart-item__media" role="cell" headers="CartDrawer-ColumnProductImage">   
+                        <a href="{{ settings.product.url }}" class="cart-item__link upsell" tabindex="-1" aria-hidden="true"> 
+                        <img
+                          class="cart-item__image"
+                          src="{{ settings.product.featured_image | image_url: width: 300 }}"
+                          alt="{{ settings.product.featured_image.alt | escape }}"
+                          loading="lazy"
+                          width="150"
+                          height="{{ 150 | divided_by: settings.product.featured_image.aspect_ratio | ceil }}"
+                        >              
+                        </a>        
+                      </td>
+                      <td class="cart-item__details" role="cell" headers="CartDrawer-ColumnProduct">
+                        {%- if settings.upsell_product_header -%}
+                        <p>{{ settings.upsell_product_header }} </p>
+                        {% endif %}
+                        {%- if settings.show_vendor -%}
+                          <p class="caption-with-letter-spacing light">{{ settings.product.vendor }}</p>
+                        {%- endif -%}
+                        <a href="{{ settings.product.url }}" class="cart-item__name h4 break">
+                          
+                          {{- settings.product.title | escape -}}
+                        </a>                   
+                          <div class="product-option">
+                            {{ settings.product.price | money }}
+                          </div>
+                      </td>
+                      <td class="cart-item__quantity" role="cell" headers="CartDrawer-ColumnQuantity">
+                      <div class="quantity">                               
+                          <button id="upsell_btn" form="upsell_form" onclick="addUpsellItemToCart(event)">
+                            ADD TO CART                    
+                          </button>
+                      </div>                  
+                      </td>
+                      </tr>                      
+                    {% endif %}
                   </tbody>
                 </table>
               </div>
@@ -435,22 +479,80 @@
 </cart-drawer>
 
 <script>
+  console.log("script corrido")
+ if('{{settings.product}}'){
+console.log("hay producto")} else{
+console.log("no hay producto")}
   document.addEventListener('DOMContentLoaded', function () {
-    function isIE() {
-      const ua = window.navigator.userAgent;
-      const msie = ua.indexOf('MSIE ');
-      const trident = ua.indexOf('Trident/');
-
-      return msie > 0 || trident > 0;
-    }
-
-    if (!isIE()) return;
-    const cartSubmitInput = document.createElement('input');
-    cartSubmitInput.setAttribute('name', 'checkout');
-    cartSubmitInput.setAttribute('type', 'hidden');
-    document.querySelector('#cart').appendChild(cartSubmitInput);
-    document.querySelector('#checkout').addEventListener('click', function (event) {
-      document.querySelector('#cart').submit();
-    });
+  function isIE() {
+    const ua = window.navigator.userAgent;
+    const msie = ua.indexOf('MSIE ');
+    const trident = ua.indexOf('Trident/');
+    return msie > 0 || trident > 0;
+  }
+  if (!isIE()) return;
+  const cartSubmitInput = document.createElement('input');
+  cartSubmitInput.setAttribute('name', 'checkout');
+  cartSubmitInput.setAttribute('type', 'hidden');
+  document.querySelector('#cart').appendChild(cartSubmitInput);
+  document.querySelector('#checkout').addEventListener('click', function (event) {
+    document.querySelector('#cart').submit();
   });
+  })
+
+  // handle Add Product button click
+
+  async function addUpsellItemToCart(evt){
+    console.log('funcion del boton corrida')
+    evt.preventDefault()  
+    
+    // define html elements as variables
+    let upsellProductForm = document.getElementById('upsell_form')
+    let upsellProductElement = document.getElementById('upsell-cart-item')
+    const parser = new DOMParser()
+
+    // POST request to add upsell product
+
+    const addUpsellItem =  await fetch(window.Shopify.routes.root + 'cart/add.js', {
+      method: "POST",
+      body: new FormData(upsellProductForm)
+    })
+    const data = await addUpsellItem.json()
+
+    //Extract html of the CartDrawer element with new produc to be displayed
+
+    const sectionsData = await data.sections['cart-drawer'] 
+    const documentHtml = await parser.parseFromString(sectionsData, "text/html"); 
+    const sectionHtmlFinal = await documentHtml.getElementById('CartDrawer').innerHTML
+
+    // Render cart drawer with added upsell product 
+
+    document.getElementById('CartDrawer').innerHTML = sectionHtmlFinal
+    
+    // add +1 product in the cart count bubble when upsell product is added
+
+    document.querySelectorAll('.cart-count-bubble').forEach(item=>item.innerText = parseInt(item.innerText)+1) 
+
+    //  hide Upsell product
+
+    document.getElementById('upsell-cart-item').classList.add('upsell-product-hidden')
+      
+  }
+ 
+  // handle hide upsell element on page load
+
+  let element = document.getElementById('upsell-cart-item')
+
+  const handleHideUpsellProduct = async()=>{
+    let res = await fetch('/cart.json')
+    let cart = await res.json()
+    let hideUpsellProductState = await cart.items.some(item=>item.variant_id== '{{ settings.product.variants[0].id }}')
+    if(hideUpsellProductState){
+      element.classList.add('upsell-product-hidden')
+    }
+  }
+  
+  if('{{ settings.product }}'){
+    handleHideUpsellProduct() 
+    }
 </script>

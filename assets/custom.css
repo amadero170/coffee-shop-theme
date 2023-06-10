@@ -1,0 +1,21 @@
+#upsell_form{
+display: none;
+}
+#upsell-cart-item{
+    margin-top: 1.5rem;
+}
+.cart-item__link.upsell{
+    display:flex;
+    align-items: center;
+}
+#upsell_btn{
+    width: 100%;
+    appearance: none;
+    background-color: rgb(0, 0, 0);
+    color: white;
+    border: none;
+    cursor:pointer
+}
+.upsell-product-hidden{
+    display:none !important
+}

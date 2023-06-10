@@ -1,11 +1,34 @@
 class CartRemoveButton extends HTMLElement {
   constructor() {
     super();
+    
+    const getNameOfDeletedItem = (cartHtml,index)=>{
+      const parser = new DOMParser()
+      let cartHtmlAsHtml = parser.parseFromString(cartHtml, "text/html");
+      let deletedCartDrawerItem = cartHtmlAsHtml.getElementById(`CartDrawer-Item-${index}`)
+      let itemName = deletedCartDrawerItem.querySelector('.cart-item__name').textContent
+      return itemName
+    }
+    
+    const getNameOfUpsellItem = (upsellElement)=> {
+      let upsellElementTitle = upsellElement.getAttribute('upsell-item-title')
+      return upsellElementTitle
+    }
 
+    let el = document.getElementById('upsell-cart-item')
+    let upsellItemName = getNameOfUpsellItem(el)
+
+    
     this.addEventListener('click', (event) => {
       event.preventDefault();
+      let elHidden = el.className.split(' ').some(item=> item =='upsell-product-hidden')  
       const cartItems = this.closest('cart-items') || this.closest('cart-drawer-items');
-      cartItems.updateQuantity(this.dataset.index, 0);
+      let deletedItem = getNameOfDeletedItem(cartItems.innerHTML,this.dataset.index)
+      if(deletedItem == upsellItemName){
+        elHidden=false
+      }
+      cartItems.updateQuantity(this.dataset.index, 0,undefined, elHidden);
+     
     });
   }
 }
@@ -42,16 +65,34 @@ class CartItems extends HTMLElement {
   }
 
   onChange(event) {
-    this.updateQuantity(event.target.dataset.index, event.target.value, document.activeElement.getAttribute('name'));
+    let el = document.getElementById('upsell-cart-item')
+    let elHidden = el.className.split(' ').some(item=> item =='upsell-product-hidden')
+    this.updateQuantity(event.target.dataset.index, event.target.value, document.activeElement.getAttribute('name'),elHidden);
+
   }
 
   onCartUpdate() {
+    let el
+    let elHidden
+    let upsellItemName
+
+    if(document.getElementById('upsell-cart-item')){
+      el = document.getElementById('upsell-cart-item')
+      elHidden =el.className.split(' ').some(item=> item =='upsell-product-hidden') 
+      upsellItemName = el.getAttribute('upsell-item-title')
+    }
+
     fetch('/cart?section_id=main-cart-items')
       .then((response) => response.text())
       .then((responseText) => {
         const html = new DOMParser().parseFromString(responseText, 'text/html');
         const sourceQty = html.querySelector('cart-items');
         this.innerHTML = sourceQty.innerHTML;
+        let upsellItemInCartUpdate = Array.from(sourceQty.querySelectorAll('.cart-item__name')).some((item)=>item.textContent == upsellItemName)
+        if(elHidden || upsellItemInCartUpdate){
+          let el = document.getElementById('upsell-cart-item')
+          el.classList.add('upsell-product-hidden')
+        }
       })
       .catch(e => {
         console.error(e);
@@ -83,9 +124,8 @@ class CartItems extends HTMLElement {
     ];
   }
 
-  updateQuantity(line, quantity, name) {
+  updateQuantity(line, quantity, name, hideStatus) {
     this.enableLoading(line);
-
     const body = JSON.stringify({
       line,
       quantity,
@@ -121,6 +161,10 @@ class CartItems extends HTMLElement {
           elementToReplace.innerHTML = 
             this.getSectionInnerHTML(parsedState.sections[section.section], section.selector);
         }));
+        if(hideStatus){
+          let el = document.getElementById('upsell-cart-item')
+          el.classList.add('upsell-product-hidden')
+        }
         const updatedValue = parsedState.items[line - 1] ? parsedState.items[line - 1].quantity : undefined;
         let message = '';
         if (items.length === parsedState.items.length && updatedValue !== parseInt(quantityElement.value)) {
@@ -140,7 +184,7 @@ class CartItems extends HTMLElement {
         } else if (document.querySelector('.cart-item') && cartDrawerWrapper) {
           trapFocus(cartDrawerWrapper, document.querySelector('.cart-item__name'))
         }
-        publish(PUB_SUB_EVENTS.cartUpdate, {source: 'cart-items'});
+        publish(PUB_SUB_EVENTS.cartUpdate, {source: 'cart-items'})
       }).catch(() => {
         this.querySelectorAll('.loading-overlay').forEach((overlay) => overlay.classList.add('hidden'));
         const errors = document.getElementById('cart-errors') || document.getElementById('CartDrawer-CartErrors');
@@ -195,7 +239,7 @@ class CartItems extends HTMLElement {
     cartDrawerItemElements.forEach((overlay) => overlay.classList.add('hidden'));
   }
 }
-
+console.log("define cart items ran")
 customElements.define('cart-items', CartItems);
 
 if (!customElements.get('cart-note')) {
